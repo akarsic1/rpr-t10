@@ -14,6 +14,7 @@ public class Grad {
         this.drzava = drzava;
     }
 
+
     public Grad(){}
 
     public Drzava getDrzava() {

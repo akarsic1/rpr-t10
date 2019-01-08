@@ -2,20 +2,32 @@ package ba.unsa.etf.rpr;
 
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXMLLoader;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import net.sf.jasperreports.engine.JRException;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 
-import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
 import java.net.URL;
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.ResourceBundle;
@@ -25,13 +37,14 @@ import java.util.Scanner;
 public class GeografijaDAO implements Initializable {
 
     private static GeografijaDAO instance = null;
-    private Connection conn;
-    private String url = "jdbc:oracle:thin:@ora.db.lab.ri.etf.unsa.ba:1521:ETFLAB";
+    public static Connection conn;
+    private String url = "jdbc:sqlite:baza.db";
     private PreparedStatement preparedStatement;
-    private ArrayList<Grad> gradovi;
+    private ArrayList<Grad> grad;
     private ArrayList<Drzava> drzave;
     Statement statement;
     private ResultSet resultSet;
+
 
     //Za fxml
     public TableView tabelaDrzava;
@@ -45,85 +58,58 @@ public class GeografijaDAO implements Initializable {
     public TableColumn<Grad, String> naziv;
     public TableColumn<Grad, Integer> brojStan;
     public TableColumn<Grad, Integer> drzava;
-
-
-
     private static void initialize() {
         instance = new GeografijaDAO();
     }
 
 
-    private GeografijaDAO() {
-        gradovi = new ArrayList<>();
+    private GeografijaDAO(){
+        grad = new ArrayList<>();
         drzave = new ArrayList<>();
-        /*try {
-            PreparedStatement statement=null;
-            Statement statement1 = null;
-            try{
-                statement1= conn.createStatement();
-                statement1.execute("CREATE TABLE drzava(id INTEGER PRIMARY KEY ,naziv varchar(255) not null, glavni_grad integer )");
-                statement1.execute("CREATE TABLE grad(id integer primary key, naziv varchar(255), broj_stanovnika INTEGER,drzava integer) ");
-                statement1.closeOnCompletion();
-            }catch (Exception e){
-                // System.out.println("ovdje je greska"+e.getMessage());
-                //statement1.execute("CREATE TABLE grad(id int primary key, naziv varchar, broj_stanovnika INTEGER,drzava int; ");
-                try {
-                    statement = conn.prepareStatement("delete from drzava");
-                    statement.execute();
-                    statement = conn.prepareStatement("delete from grad");
-                    statement.execute();
-                } catch (SQLException e1) {
-                    // e1.printStackTrace();
-                }
-            }
-        }catch (Exception e){}*/
         napuniPodacima();
+        conn = null;
         try {
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-            conn = DriverManager.getConnection(url, "AH18103", "HRht2wV1");
-            preparedStatement = conn.prepareStatement("INSERT INTO grad VALUES (?, ?, ?, NULL)");
-            statement = conn.createStatement();
-            // if (!login()) throw new IllegalArgumentException();
-            //String korisnik = controller.getAutor().textProperty();
-            //ResultSet resultSet = statement.executeQuery("INSERT INTO grad VALUES (?, ?, ?, NULL)");
-            for (var grad : gradovi) {
-                try {
-                    preparedStatement.setInt(1, grad.getId());
-                    preparedStatement.setString(2, grad.getNaziv());
-                    preparedStatement.setInt(3, grad.getBrojStanovnika());
-                    preparedStatement.executeUpdate();
-                } catch (SQLException ignored) {
+            conn = DriverManager.getConnection("jdbc:sqlite:baza.db");
+
+            Statement statement = null;
+            try{
+                statement = conn.createStatement();
+                statement.execute("select id from drzava");
+
+            }catch (Exception e){
+                try{
+                    Statement statement2=null;
+                    statement2 = conn.createStatement();
+//                    connection.setAutoCommit(false);
+                    statement2.execute("CREATE TABLE grad(id integer primary key, naziv varchar(255), broj_stanovnika integer)");
+                    statement2.execute("CREATE TABLE drzava(id integer primary key, naziv varchar(255), glavni_grad integer unique references grad(id))");
+                    statement2.execute("ALTER TABLE grad ADD drzava integer references drzava(id)");
+
+                    statement2.execute("INSERT INTO drzava values (1,'Velika Britanija',1)");
+                    statement2.execute("INSERT INTO drzava values (2,'Austrija',2)");
+                    statement2.execute("INSERT INTO drzava values (3,'Francuska',3)");
+                    statement2.execute("INSERT INTO grad values (1,'London',8825000,1)");
+                    statement2.execute("INSERT INTO grad values (2,'Beč',1899055,2)");
+                    statement2.execute("INSERT INTO grad values (3,'Pariz',2206488,3)");
+                    statement2.execute("INSERT INTO grad values (4,'Manchester',545500,1)");
+                    statement2.execute("INSERT INTO grad values (5,'Graz',280200,2)");
+                }catch (Exception ex){
+
                 }
             }
-            preparedStatement = conn.prepareStatement("INSERT  INTO drzava VALUES(?, ?, ?)");
-            for (var drzava : drzave) {
-                try {
-                    preparedStatement.setInt(1, drzava.getId());
-                    preparedStatement.setString(2, drzava.getNaziv());
-                    preparedStatement.setInt(3, drzava.getGlavniGrad().getId());
-                    preparedStatement.executeUpdate();
-                } catch (SQLException ignored) {
-                }
-            }
-            preparedStatement = conn.prepareStatement("UPDATE grad SET drzava = ? WHERE id = ?");
-            for (var grad : gradovi) {
-                try {
-                    preparedStatement.setInt(1, grad.getDrzava().getId());
-                    preparedStatement.setInt(2, grad.getId());
-                    preparedStatement.executeUpdate();
-                } catch (SQLException ignored) {
-                }
-            }
+
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
     }
 
 
+
     public static void removeInstance() {
         instance = null;
+    }
+
+    public static Connection getConnection() {
+        return conn;
     }
 
     private void napuniPodacima() {
@@ -140,15 +126,15 @@ public class GeografijaDAO implements Initializable {
         bec.setDrzava(austrija);
         manchester.setDrzava(engleska);
         graz.setDrzava(austrija);
-        gradovi.add(pariz);
-        gradovi.add(london);
-        gradovi.add(bec);
-        gradovi.add(manchester);
-        gradovi.add(graz);
+        grad.add(pariz);
+        grad.add(london);
+        grad.add(bec);
+        grad.add(manchester);
+        grad.add(graz);
         drzave.add(francuska);
         drzave.add(engleska);
         drzave.add(austrija);
-        gradovi.sort(new Comparator<Grad>() {
+        grad.sort(new Comparator<Grad>() {
             @Override
             public int compare(Grad o1, Grad o2) {
                 Integer brojStanovnika1 = o2.getBrojStanovnika();
@@ -166,7 +152,7 @@ public class GeografijaDAO implements Initializable {
 
 
     public ArrayList<Grad> gradovi() {
-        return gradovi;
+        return grad;
     }
 
     public Grad glavniGrad(String drzava) {
@@ -242,8 +228,8 @@ public class GeografijaDAO implements Initializable {
             //e.printStackTrace();
         }*/
 
-        if (gradovi.contains(grad)) throw new IllegalArgumentException("Grad vec postoji");
-        gradovi.add(grad);
+        if (this.grad.contains(grad)) throw new IllegalArgumentException("Grad vec postoji");
+        this.grad.add(grad);
 
     }
 
@@ -264,6 +250,35 @@ public class GeografijaDAO implements Initializable {
     }
 
     public void izmijeniGrad(Grad grad) {
+
+        /*PreparedStatement statement = null;
+        try {
+            dajGradove = connection.prepareStatement("select * from grad");
+            drzava = conn.prepareStatement("select * from drzava");
+            getGrad = connection.prepareStatement("select * from grad where id=?");
+            getDrzava = connection.prepareStatement("select * from drzava where naziv=?");
+            PreparedStatement drzava;
+            drzava.setString(1,grad.getDrzava().getNaziv());
+            ResultSet res = getDrzava.executeQuery();
+            int id=0;
+            while(res.next()){
+                id=res.getInt(3);
+            }
+            getGrad.setInt(1,id);
+            ResultSet set = getGrad.executeQuery();
+            statement = connection.prepareStatement("update grad set naziv=? where id =?");
+            while(set.next()){
+                statement.setInt(2,id);
+                statement.setString(1,grad.getNaziv());
+                set.close();
+                break;
+            }
+            statement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }*/
+
         try{
             String upit1 = "UPDATE grad set broj_stanovnika = ? where id = ?";
             String upit2 = "UPDATE grad set name = ? where id = ?";
@@ -295,7 +310,7 @@ public class GeografijaDAO implements Initializable {
         glavniGrad.setCellValueFactory(new PropertyValueFactory<>("glavniGrad"));
 
 
-        tabelaGradova.setItems((ObservableList) gradovi);
+        tabelaGradova.setItems((ObservableList) grad);
         id.setCellValueFactory(new PropertyValueFactory<>("id"));
         naziv.setCellValueFactory(new PropertyValueFactory<>("naziv"));
         brojStan.setCellValueFactory(new PropertyValueFactory<>("brojStan"));
@@ -321,4 +336,11 @@ public class GeografijaDAO implements Initializable {
         String drzavaZaPronaci = scanner.nextLine();
         nadjiDrzavu(drzavaZaPronaci);
     }
+
+
+    public Connection getConn() {
+        return conn;
+    }
+
+
 }

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="426.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ba.unsa.etf.rpr.ProgramController">
+    <children>
+        <BorderPane layoutY="52.0" prefHeight="400.0" prefWidth="300.0">
+            <center>
+                <TableView fx:id="tabelaGradova" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="359.0" prefWidth="300.0" BorderPane.alignment="CENTER">
+                    <columns>
+                        <TableColumn fx:id="id" prefWidth="30.4000244140625" text="ID" />
+                        <TableColumn fx:id="naziv" text="NAZIV" />
+                        <TableColumn fx:id="brojStan" minWidth="0.0" prefWidth="108.800048828125" text="BROJ STANOVNIKA" />
+                        <TableColumn fx:id="drzava" minWidth="0.0" prefWidth="81.59991455078125" text="DRZAVA" />
+                    </columns>
+                </TableView>
+            </center>
+        </BorderPane>
+        <BorderPane layoutX="300.0" layoutY="52.0" prefHeight="400.0" prefWidth="300.0">
+            <center>
+                <TableView fx:id="tabelaDrzava" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="359.0" prefWidth="300.0" BorderPane.alignment="CENTER">
+                    <columns>
+                        <TableColumn fx:id="nazivD" prefWidth="92.0" text="NAZIV" />
+                        <TableColumn fx:id="glavniGrad1" minWidth="0.0" prefWidth="131.20001220703125" text="GLAVNI GRAD" />
+                        <TableColumn fx:id="idD" prefWidth="72.0" text="ID" />
+                    </columns>
+                </TableView>
+            </center>
+        </BorderPane>
+        <VBox prefHeight="100.0" prefWidth="600.0">
+            <children>
+                <MenuBar prefHeight="29.0" prefWidth="591.0">
+                    <menus>
+                        <Menu mnemonicParsing="false" text="File">
+                            <items>
+                                <MenuItem fx:id="open" mnemonicParsing="false" onAction="#otvori" text="Open" />
+                                <MenuItem fx:id="save" mnemonicParsing="false" onAction="#snimi" text="Save" />
+                                <MenuItem mnemonicParsing="false" text="Close" />
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Edit">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="Change language" />
+                                <MenuItem mnemonicParsing="false" text="Delete" />
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Help">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="About" />
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+                <ToolBar maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="43.0" prefWidth="619.0">
+                    <items>
+                        <Button fx:id="ispisi" mnemonicParsing="false" onAction="#stampaj" text="Ispisi" />
+                        <Button fx:id="nadiD" mnemonicParsing="false" onAction="#noviIzvjestaj" text="Ispisi drzavu" />
+                        <Button fx:id="dodaj" mnemonicParsing="false" text="Dodaj grad" />
+                        <Button fx:id="dodajD" mnemonicParsing="false" text="Dodaj drzavu" />
+                    </items>
+                </ToolBar>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
